@@ -1,0 +1,57 @@
+﻿Three suggestions from Github Copilot:
+
+(1)
+•	Unicode/preferred-name test to cover accessibility / cultural text 
+handling and ensure messages include non-Latin characters.
+[TestMethod]
+        public void BookAppointment_WithUnicodePreferredName_IncludesNameInMessage()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Legal Name", "李小龍"); // non-Latin preferred name
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
+
+            var service = new AppointmentBookingService();
+            var result = service.BookAppointment(request);
+
+            Assert.IsTrue(result.Success);
+            StringAssert.Contains(result.Message, "李小龍");
+        }
+
+//I choose this as a Doctors office is a professional setting it their
+software should be able to handle names from different cultures and languages
+diallowing exculsion
+
+(2)
+•	Same-day requested-date test to document and 
+lock-in current behavior (testability / maintainability).
+
+[TestMethod]
+        public void AppointmentRequest_SameDayRequestedDate_IsAllowed()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 1);
+            var patient = new Patient("P001", "Diana William");
+
+            // same calendar day (midnight of today) - should be allowed by current logic
+            var requested = DateTime.Today;
+            var req = new AppointmentRequest(patient, doctor, requested);
+
+            Assert.AreEqual(requested, req.RequestedDate);
+        }
+
+(3)
+•	Null and argument-null tests for constructors and service to improve reliability and test surface for invalid inputs.
+•	Doctor/Patient constructor edge-case tests (empty full/legal name) for maintainability and to prevent regressions.
+•	Direct test of ReserveSlots() throwing when no slots to validate domain invariants.
+•	Unicode/preferred-name test to cover accessibility / cultural text handling and ensure messages include non-Latin characters.
+•	Concurrent booking test to expose thread-safety issues (reliability). This test will reveal if the service/Doctor needs synchronization.
+•	Same-day requested-date test to document and lock-in current behavior (testability / maintainability).
+•	BookingResult value test to ensure the simple immutable result behaves as expected.
+
+ [TestMethod]
+        public void BookingResult_PropertiesReflectValuesAndAreReadOnly()
+        {
+            var result = new BookingResult(true, "ok");
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual("ok", result.Message);
+            // properties are read-only by design (compile-time enforced); runtime asserts values remain expected
+        }
