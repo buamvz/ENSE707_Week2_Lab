@@ -2,14 +2,21 @@
 {
     public class AppointmentBookingService
     {
-        public bool BookAppointment(AppointmentRequest request)
+        public BookingResult BookAppointment(AppointmentRequest request)
         {
-            if(request.Doctor.AvailableSlots <= 0)
-                return false;
+            if(request == null)
+                return new BookingResult(false, "Appointment request is missing.");
 
-            request.Doctor.AvailableSlots--;
-            return true;
+            if (!request.Doctor.HasAvailableSlots())
+            {
+                return new BookingResult(false, $"Appointment cannot be booked becasuse{request.Doctor.FullName} has no available slots.");
+            }
+
+            request.Doctor.ReserveSlots();
+
+            return new BookingResult(true, $"Appointment booked successfully for {request.Patient.DisplayName} with {request.Doctor.FullName}."); 
         }
+
 
     }
 }

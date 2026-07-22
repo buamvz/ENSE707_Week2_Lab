@@ -8,83 +8,41 @@ namespace AppointmentBooking.Tests
         [TestMethod]
         public void BookAppointment_WhenDoctorHasAvailableSlots_ReturnTrue()
         {
-            var doctor = new Doctor
-            {
-                Id = "D001",
-                FullName = "Dr Mark",
-                AvailableSlots = 2
-            };
+            var doctor = new Doctor("D001", "Dr Mark", 2);
 
-            var patient = new Patient
-            {
-                Id = "P001",
-                FullName = "Diana William"
-            };
+            var patient = new Patient("P001", "Diana William");
 
-            var request = new AppointmentRequest
-            {
-                Doctor = doctor,
-                Patient = patient,
-                RequestedDate = DateTime.Today.AddDays(1)
-            };
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
 
             var service = new AppointmentBookingService();
-            bool result = service.BookAppointment(request);
+            BookingResult result = service.BookAppointment(request);
 
-            Assert.IsTrue(result);
+            Assert.IsTrue(result.Success);
         }
 
         [TestMethod]
         public void BookAppointment_WhenDoctorHasNoAvaiableSlots_ReturnFalse()
         {
-            var doctor = new Doctor
-            {
-                Id = "D001",
-                FullName = "Dr Mark",
-                AvailableSlots = 0
-            };
+            var doctor = new Doctor("D001", "Dr Mark", 0);
 
-            var patient = new Patient
-            {
-                Id = "P001",
-                FullName = "Diana William"
-            };
+            var patient = new Patient("P001", "Diana William");
 
-            var request = new AppointmentRequest
-            {
-                Doctor = doctor,
-                Patient = patient,
-                RequestedDate = DateTime.Today.AddDays(1)
-            };
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
 
             var service = new AppointmentBookingService();
-            bool result = service.BookAppointment(request);
+            BookingResult result = service.BookAppointment(request);
 
-            Assert.IsFalse(result);
+            Assert.IsFalse(result.Success);
         }
 
         [TestMethod]
         public void BookAppointment_WhenSuccessful_DecreaseAvailableSlots()
         {
-            var doctor = new Doctor
-            {
-                Id = "D001",
-                FullName = "Dr Mark",
-                AvailableSlots = 2
-            };
+            var doctor = new Doctor("D001", "Dr Mark", 2);
 
-            var patient = new Patient
-            {
-                Id = "P001",
-                FullName = "Diana William"
-            };
+            var patient = new Patient("P001", "Diana William");
 
-            var request = new AppointmentRequest
-            {
-                Doctor = doctor,
-                Patient = patient,
-                RequestedDate = DateTime.Today.AddDays(1)
-            };
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
 
             var service = new AppointmentBookingService();
             service.BookAppointment(request);
@@ -95,30 +53,88 @@ namespace AppointmentBooking.Tests
         [TestMethod]
         public void BookAppointment_WhenFailed_DoesNotDecreaseAvailableSlots()
         {
-            var doctor = new Doctor
-            {
-                Id = "D001",
-                FullName = "Dr Mark",
-                AvailableSlots = 0
-            };
+            var doctor = new Doctor("D001", "Dr Mark", 0);
 
-            var patient = new Patient
-            {
-                Id = "P001",
-                FullName = "Diana William"
-            };
+            var patient = new Patient("P001", "Diana William");
 
-            var request = new AppointmentRequest
-            {
-                Doctor = doctor,
-                Patient = patient,
-                RequestedDate = DateTime.Today.AddDays(1)
-            };
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
 
             var service = new AppointmentBookingService();
             service.BookAppointment(request);
 
             Assert.AreEqual(0, doctor.AvailableSlots);
+        }
+
+        [TestMethod]
+        public void Doctor_WhenIdIsEmpty_ThrowsException()
+        {
+            Assert.ThrowsException<ArgumentException>(() =>
+            new Doctor("", "Dr Mark", 2));
+        }
+
+        [TestMethod]
+        public void Doctor_WhenAvailableSlotsIsNegative_ThrowsException()
+        {
+            Assert.ThrowsException<ArgumentException>(() =>
+            new Doctor("D001", "Dr Mark", -1));
+        }
+        public void Patient_WhenIdIsEmpty_ThrowsException()
+        {
+            Assert.ThrowsException<ArgumentException>(() =>
+            new Patient("", "Diana William"));
+        }
+
+        [TestMethod]
+        public void Patient_WhenPreferredNameExsts_DisplayNameUsesPreferredName()
+        {
+            var patient = new Patient("P001", "Diana William", "Aroha");
+
+            Assert.AreEqual("Aroha", patient.DisplayName);
+        }
+
+        [TestMethod]
+        public void Patient_WhenPreferredNameMissing_DisplayNameUsesLegalName()
+        {
+            var patient = new Patient("P001", "Diana William");
+
+            Assert.AreEqual("Diana William", patient.DisplayName);
+        }
+
+        [TestMethod]
+        public void AppointmentRequest_WhenRequestedDateIsInPast_ThrowsException()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Diana William");
+
+            Assert.ThrowsException<ArgumentException>(() =>
+                new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(-1)));
+        }
+
+        [TestMethod]
+        public void BookAppointment_WhenSuccessful_ReturnsHelpfulMessage()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Diana William", "Aroha");
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
+
+            var service = new AppointmentBookingService();
+            BookingResult result = service.BookAppointment(request);
+
+            StringAssert.Contains(result.Message, "Appointment booked successfully");
+            StringAssert.Contains(result.Message, "Aroha");
+        }
+
+        [TestMethod]
+        public void BookAppointment_WhenNoSlots_ReturnsHelpfulMessage()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 0);
+            var patient = new Patient("P001", "Diana William");
+            var request = new AppointmentRequest(patient, doctor, DateTime.Today.AddDays(1));
+
+            var service = new AppointmentBookingService();
+            BookingResult result = service.BookAppointment(request);
+
+            StringAssert.Contains(result.Message, "no available slots.");
         }
     }
 }
