@@ -1,14 +1,17 @@
 ﻿using System;
 
-public class BookingResult
+namespace AppointmentBooking
 {
-	public bool Success { get; }
-
-	public string Message { get; }
-
-	public BookingResult(bool success, string message)
+	public class BookingResult
 	{
-		Success = success;
-		Message = message;
+		public bool Success { get; }
+
+		public string Message { get; }
+
+		public BookingResult(bool success, string message)
+		{
+			Success = success;
+			Message = message;
+		}
 	}
 }

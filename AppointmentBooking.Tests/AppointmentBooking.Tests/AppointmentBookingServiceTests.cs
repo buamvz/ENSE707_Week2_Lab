@@ -1,4 +1,5 @@
-﻿using AppointmentBooking;
+﻿using System.Numerics;
+using AppointmentBooking;
 
 namespace AppointmentBooking.Tests
 {
@@ -78,6 +79,7 @@ namespace AppointmentBooking.Tests
             Assert.ThrowsException<ArgumentException>(() =>
             new Doctor("D001", "Dr Mark", -1));
         }
+        [TestMethod]
         public void Patient_WhenIdIsEmpty_ThrowsException()
         {
             Assert.ThrowsException<ArgumentException>(() =>
@@ -134,7 +136,104 @@ namespace AppointmentBooking.Tests
             var service = new AppointmentBookingService();
             BookingResult result = service.BookAppointment(request);
 
-            StringAssert.Contains(result.Message, "no available slots.");
+            StringAssert.Contains(result.Message, "No available slots");
+        }
+
+        //bookings for today are being rejected
+        [TestMethod]
+        public void BookAppointment_WhenBookingForToday_ReturnsFalse()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Aroha");
+
+            var request = new AppointmentRequest(
+                patient,
+                doctor,
+                DateTime.Today);
+
+            var service = new AppointmentBookingService();
+
+            BookingResult result = service.BookAppointment(request);
+
+            Assert.IsFalse(result.Success);
+        }
+
+        //booking tomorrow is accepted
+        [TestMethod]
+        public void BookAppointment_WhenBookingTomorrow_ReturnsTrue()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Aroha");
+
+            var request = new AppointmentRequest(
+                patient,
+                doctor,
+                DateTime.Today.AddDays(1));
+
+            var service = new AppointmentBookingService();
+
+            BookingResult result = service.BookAppointment(request);
+
+            Assert.IsTrue(result.Success);
+        }
+
+        //Sucess message contains the docotrs name
+        [TestMethod]
+        public void BookAppointment_WhenSuccessful_MessageContainsDoctorName()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Aroha");
+
+            var request = new AppointmentRequest(
+                patient,
+                doctor,
+                DateTime.Today.AddDays(1));
+
+            var service = new AppointmentBookingService();
+
+            BookingResult result = service.BookAppointment(request);
+
+            StringAssert.Contains(result.Message, "Dr Mark");
+        }
+
+        //Sucess message contains the patients name
+        [TestMethod]
+        public void BookAppointment_WhenSuccessful_MessageContainsPatientName()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 2);
+            var patient = new Patient("P001", "Aroha");
+
+            var request = new AppointmentRequest(
+                patient,
+                doctor,
+                DateTime.Today.AddDays(1));
+
+            var service = new AppointmentBookingService();
+
+            BookingResult result = service.BookAppointment(request);
+
+            StringAssert.Contains(result.Message, "Aroha");
+        }
+
+        //Doctor has reached their maximum daily appointments
+        [TestMethod]
+        public void BookAppointment_WhenDoctorReachesDailyLimit_ReturnsFalse()
+        {
+            var doctor = new Doctor("D001", "Dr Mark", 20);
+            doctor.MaxDailyAppointments = 1;
+
+            var patient1 = new Patient("P001", "Alice");
+            var patient2 = new Patient("P002", "Bob");
+
+            var service = new AppointmentBookingService();
+
+            service.BookAppointment(
+                new AppointmentRequest(patient1, doctor, DateTime.Today.AddDays(1)));
+
+            BookingResult result = service.BookAppointment(
+                new AppointmentRequest(patient2, doctor, DateTime.Today.AddDays(1)));
+
+            Assert.IsFalse(result.Success);
         }
     }
 }
