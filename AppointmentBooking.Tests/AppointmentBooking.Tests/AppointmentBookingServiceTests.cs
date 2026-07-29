@@ -126,6 +126,8 @@ namespace AppointmentBooking.Tests
             StringAssert.Contains(result.Message, "Aroha");
         }
 
+
+
         [TestMethod]
         public void BookAppointment_WhenNoSlots_ReturnsHelpfulMessage()
         {
