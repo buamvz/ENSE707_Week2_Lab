@@ -67,4 +67,9 @@
             
         }
     }
-}
+
+        public void ReleaseSlot()
+        {
+            AvailableSlots++;
+        }
+    }

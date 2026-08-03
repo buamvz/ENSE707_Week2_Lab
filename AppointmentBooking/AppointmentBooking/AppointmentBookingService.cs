@@ -1,4 +1,6 @@
-﻿namespace AppointmentBooking
+﻿using ENSE707_AppointmentBooking;
+
+namespace AppointmentBooking
 {
     public class AppointmentBookingService
     {
@@ -9,34 +11,39 @@
             RequiresOneDayNotice = requiresOneDayNotice;
         }
 
-        public BookingResult BookAppointment(AppointmentRequest request)
+        public Appointment BookAppointment(AppointmentRequest request)
         {
             if (request == null)
-                return new BookingResult(false, "Appointment request is missing.");
+                throw new ArgumentNullException(nameof(request));
 
-            // Validate patient id
             if (string.IsNullOrWhiteSpace(request.Patient?.Id))
-                return new BookingResult(false, "Patient ID required. Please provide a valid patient ID before booking.");
+                throw new ArgumentException("Patient ID is required.");
 
-            // Enforce clinic notice policy
             if (RequiresOneDayNotice && request.RequestedDate.Date == DateTime.Today)
-            {
-                return new BookingResult(false, "Appointments must be booked at least one day in advance. Please choose another booking date.");
-            }
+                throw new InvalidOperationException("Appointments must be booked at least one day in advance.");
 
-            // Check doctor's availability for the requested date, including daily limits
             if (!request.Doctor.CanAcceptAppointment(request.RequestedDate))
-            {
-                return new BookingResult(false, $"No available slots for {request.Doctor.FullName} on {request.RequestedDate:d}. Try another date or contact the clinic for assistance.");
-            }
+                throw new InvalidOperationException("No available slots.");
 
-            // Reserve the slot for the requested date
             request.Doctor.ReserveSlots(request.RequestedDate);
 
-            //keeping this makes it actionable
-            return new BookingResult(true, $"Appointment booked successfully for {request.Patient.DisplayName} with {request.Doctor.FullName} on {request.RequestedDate:d}. If you need to change or cancel, please contact the clinic.");
+            return new Appointment(
+                Guid.NewGuid().ToString(),
+                request.Doctor,
+                request.Patient,
+                request.RequestedDate);
+        }
+    }
+
+        
+    public void CancelAppointment(Appointment appointment)
+        {
+            if (appointment == null)
+                throw new ArgumentNullException(nameof(appointment));
+            appointment.Cancel();
+            // Release the doctor's slot.
+
+            appointment.Doctor.ReleaseSlot();
         }
 
-
-    }
 }
