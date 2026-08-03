@@ -33,10 +33,8 @@ namespace AppointmentBooking
                 request.Patient,
                 request.RequestedDate);
         }
-    }
 
-        
-    public void CancelAppointment(Appointment appointment)
+        public void CancelAppointment(Appointment appointment)
         {
             if (appointment == null)
                 throw new ArgumentNullException(nameof(appointment));
@@ -45,5 +43,6 @@ namespace AppointmentBooking
 
             appointment.Doctor.ReleaseSlot();
         }
+    }
 
 }
